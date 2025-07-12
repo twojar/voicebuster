@@ -39,7 +39,7 @@ y = []
 for label, category in enumerate(CATEGORIES):
     folder = os.path.join('audio', category)
     for filename in os.listdir(folder): 
-        if filename.endswith('wav'):
+        if filename.endswith('wav') or filename.endswith('mp3'):
             file_path = os.path.join(folder, filename)
             try:
                 mfcc_vector = get_mfcc(file_path)
@@ -54,7 +54,7 @@ y = np.array(y)
 
 # split arrays into random train and test subsets
 # 25% testing, 75% training
-x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.25, random_state=0)
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=0)
 
 #train model using RandomForestClassifier
 model = RandomForestClassifier()
