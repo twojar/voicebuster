@@ -1,11 +1,5 @@
-# Ignore PyCharm config
 .idea/
-
-# Ignore Python artifacts
 __pycache__/
 *.pyc
 *.pkl
 .venv/
-
-# Ignore data
-audio/
