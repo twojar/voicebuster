@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import classification_report
 from librosa.feature import mfcc
 import joblib
@@ -26,45 +27,56 @@ def get_mfcc(filename):
     mfcc_array = np.mean(mfcc_array.T, axis=0)
     return mfcc_array
 
+if __name__ == "__main__":
+    # x: stores mfcc vectors from audio training data
+    # y: stores labels from audio training data (real or fake)
+    x = []
+    y = []
 
-# x: stores mfcc vectors from audio training data
-# y: stores labels from audio training data (real or fake)
-x = []
-y = []
 
+    # Loop thru audio data and classify in y array
+    # y = 0 (real)
+    # y = 1 (fake)
+    for label, category in enumerate(CATEGORIES):
+        folder = os.path.join('audio', category)
+        for filename in os.listdir(folder):
+            if filename.endswith('wav') or filename.endswith('mp3'):
+                file_path = os.path.join(folder, filename)
+                try:
+                    mfcc_vector = get_mfcc(file_path)
+                    x.append(mfcc_vector)
+                    y.append(label)
+                except Exception as Error:
+                    print(Error)
+                    print("ERROR!")
 
-# Loop thru audio data and classify in y array
-# y = 0 (real)
-# y = 1 (fake)
-for label, category in enumerate(CATEGORIES):
-    folder = os.path.join('audio', category)
-    for filename in os.listdir(folder): 
-        if filename.endswith('wav') or filename.endswith('mp3'):
-            file_path = os.path.join(folder, filename)
-            try:
-                mfcc_vector = get_mfcc(file_path)
-                x.append(mfcc_vector)
-                y.append(label)
-            except Exception as Error:
-                print(Error)
-                print("ERROR!")
+    # split arrays into random train and test subsets
+    # 25% testing, 75% training
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=0)
 
-x = np.array(x)
-y = np.array(y)
+    #train model using MLPClassifier (Neural Network)
+    model = MLPClassifier(
+        #two hidden layers
+        hidden_layer_sizes=(128,64),
+        #activation function
+        activation="relu",
+        #optimizer
+        solver='adam',
+        #regularization
+        alpha=0.0001,
+        #training iterations
+        max_iter=1000,
+        #random state
+        random_state=100,
+        verbose=True
+    )
+    model.fit(x_train, y_train)
 
-# split arrays into random train and test subsets
-# 25% testing, 75% training
-x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=0)
+    #test
+    predictions = model.predict(x_test)
+    print(classification_report(y_test, predictions))
 
-#train model using RandomForestClassifier
-model = RandomForestClassifier()
-model.fit(x_train, y_train)
-
-#test
-predictions = model.predict(x_test)
-print(classification_report(y_test, predictions))
-
-#save model to path
-joblib.dump(model, 'voicebuster.pk1')
+    #save model to path
+    joblib.dump(model, 'voicebuster_mlp.pkl')
 
 
